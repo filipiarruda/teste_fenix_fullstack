@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+
+cd /var/ww/../test/../docker/entrypoint- backend. sh

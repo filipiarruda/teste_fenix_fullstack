@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\{HealthController,ExamController,QuestionController,SubmissionController,AnalyticsController,AuthController};
+
+// Swagger UI
+Route::get("/api/documentation", function() {
+  return view("swagger-ui");
+});
+
+// API Documentation JSON
+Route::get("/api/docs", function() {
+  $path = storage_path("api-docs/api-docs.json");
+  if (!file_exists($path)) {
+    return response()->json(["error" => "Documentation not found"], 404);
+  }
+  $json = file_get_contents($path);
+  return response($json, 200)->header("Content-Type", "application/json");
+});
+
+// Health check (public, no auth)
+Route::get("/api/v1/health", [HealthController::class, "check"]);
+
+// API routes with API middleware (NO CSRF)
+Route::middleware('api')->prefix("api/v1")->group(function(){
+  // Authentication routes
+  Route::prefix("auth")->group(function(){
+    Route::post("/login", [AuthController::class, "login"]);
+    Route::post("/logout", [AuthController::class, "logout"])->middleware("auth:sanctum");
+    Route::get("/me", [AuthController::class, "me"])->middleware("auth:sanctum");
+  });
+
+  // Exam endpoints
+  Route::apiResource("/exams", ExamController::class);
+  Route::post("/submissions/submit", [SubmissionController::class, "submit"]);
+  Route::get("/submissions/exam/{examId}/result/{userId}", [SubmissionController::class, "getResult"]);
+  Route::get("/analytics/exam/{examId}/ranking", [AnalyticsController::class, "ranking"]);
+  Route::get("/analytics/exam/{examId}/average", [AnalyticsController::class, "average"]);
+});

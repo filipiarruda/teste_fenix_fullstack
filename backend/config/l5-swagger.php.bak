@@ -1,0 +1,17 @@
+<?php
+
+$yaml = <<<'YAML'
+<?php
+return [
+    'default' => 'default',
+    'documentations' => [
+        'default' => [
+            'api' => [
+                'title' => 'Fenix Educação API'
+            ]
+        ]
+    ]
+];
+YAML;
+
+echo $yaml;

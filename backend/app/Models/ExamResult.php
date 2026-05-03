@@ -1,0 +1,9 @@
+<?php namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+class ExamResult extends Model {
+    protected $table = 'exam_results';
+    protected $fillable = ['exam_id', 'student_id', 'correct_answers', 'total_questions', 'score', 'passed'];
+    public function student(): BelongsTo { return $this->belongsTo(User::class); }
+    public function exam(): BelongsTo { return $this->belongsTo(Exam::class); }
+}
