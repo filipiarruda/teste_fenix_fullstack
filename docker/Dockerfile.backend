@@ -1,0 +1,63 @@
+FROM php:8.4-cli-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    postgresql-dev \
+    libpq \
+    libxml2-dev \
+    git \
+    curl \
+    zip \
+    unzip \
+    composer \
+    linux-headers \
+    autoconf \
+    g++ \
+    make \
+    oniguruma-dev \
+    perl
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    bcmath \
+    mbstring \
+    session \
+    xml \
+    dom
+
+# Note: tokenizer is built-in with PHP 8.4, no installation needed
+
+# Install Redis extension via PECL
+RUN pecl install redis && \
+    docker-php-ext-enable redis
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy composer files
+COPY backend/composer.json ./
+# Install dependencies (--no-scripts because artisan doesn't exist yet)
+RUN composer install --no-interaction --ignore-platform-reqs --no-scripts
+
+# Copy application files
+COPY backend .
+
+# Regenerate autoload after app files are copied (--no-scripts avoids running artisan at build time)
+RUN composer dump-autoload --no-scripts
+
+# Create necessary directories
+RUN mkdir -p storage/logs bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache && \
+    rm -rf bootstrap/cache/*
+
+# Copy entrypoint script
+COPY docker/entrypoint-backend.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint-backend.sh
+
+# Expose port
+EXPOSE 8000
+
+# Start PHP development server
+ENTRYPOINT ["/usr/local/bin/entrypoint-backend.sh"]

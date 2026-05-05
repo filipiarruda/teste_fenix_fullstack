@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fenix_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fenix_db}
+      POSTGRES_USER: ${POSTGRES_USER:-fenix_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fenix_pass}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fenix_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fenix_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: fenix_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fenix_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: fenix_backend
+    environment:
+      APP_NAME: "Fenix Educação"
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY:-base64:z/sy1kND1dK/3n0/OphDYw545hJDdLHuR22Vl8g+OzI=}
+      APP_URL: ${APP_URL:-http://localhost:8885}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB:-fenix_db}
+      DB_USERNAME: ${POSTGRES_USER:-fenix_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-fenix_pass}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: "null"
+      REDIS_PORT: 6379
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    ports:
+      - "${BACKEND_PORT:-8885}:8000"
+    volumes:
+      - backend_storage:/var/www/html/storage
+      - backend_cache:/var/www/html/bootstrap/cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fenix_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: fenix_frontend
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: ${APP_URL:-http://localhost:8885}
+    ports:
+      - "${FRONTEND_PORT:-8004}:5173"
+    volumes:
+      - frontend_modules:/app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - fenix_network
+    command: npm run dev -- --host
+    restart: unless-stopped
+
+networks:
+  fenix_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_storage:
+  backend_cache:
+  frontend_modules:
+  frontend_node_modules:

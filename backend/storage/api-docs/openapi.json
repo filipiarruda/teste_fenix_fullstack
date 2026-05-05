@@ -1,0 +1,784 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Fenix Educação API",
+    "description": "API para gerenciamento de provas online - Professores criam provas e alunos respondem questões",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Fenix Educação",
+      "url": "http://localhost:8885"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8885/api/v1",
+      "description": "Development Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Verifica se a API está funcionando",
+        "responses": {
+          "200": {
+            "description": "API está saudável",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Registrar novo usuário",
+        "description": "Cria uma nova conta de professor ou aluno",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password", "password_confirmation", "role"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "João Silva"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "senha123"
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "senha123"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["professor", "student"],
+                    "example": "professor"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário registrado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                        "email": {"type": "string"},
+                        "role": {"type": "string"}
+                      }
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login de usuário",
+        "description": "Autentica um usuário existente",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "senha123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                        "email": {"type": "string"},
+                        "role": {"type": "string"}
+                      }
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout",
+        "description": "Realiza logout do usuário autenticado",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout realizado com sucesso"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Obter perfil do usuário",
+        "description": "Retorna os dados do usuário autenticado",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer"},
+                    "name": {"type": "string"},
+                    "email": {"type": "string"},
+                    "role": {"type": "string"},
+                    "created_at": {"type": "string", "format": "date-time"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exams": {
+      "get": {
+        "tags": ["Exams"],
+        "summary": "Listar provas",
+        "description": "Lista todas as provas (professor vê suas provas, aluno vê todas disponíveis)",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de provas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "integer"},
+                      "title": {"type": "string"},
+                      "description": {"type": "string"},
+                      "professor_id": {"type": "integer"},
+                      "passing_grade": {"type": "integer"},
+                      "questions_count": {"type": "integer"},
+                      "created_at": {"type": "string", "format": "date-time"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Exams"],
+        "summary": "Criar nova prova",
+        "description": "Apenas professores podem criar provas",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "description"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Prova de Matemática - Capítulo 3"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Avaliação sobre trigonometria"
+                  },
+                  "passing_grade": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "example": 60
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Prova criada com sucesso"
+          },
+          "403": {
+            "description": "Apenas professores podem criar provas"
+          }
+        }
+      }
+    },
+    "/exams/{id}": {
+      "get": {
+        "tags": ["Exams"],
+        "summary": "Obter detalhes da prova",
+        "description": "Retorna detalhes de uma prova específica com suas questões",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhes da prova"
+          },
+          "404": {
+            "description": "Prova não encontrada"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Exams"],
+        "summary": "Atualizar prova",
+        "description": "Apenas o professor criador pode atualizar a prova",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {"type": "string"},
+                  "description": {"type": "string"},
+                  "passing_grade": {"type": "integer"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prova atualizada"
+          },
+          "403": {
+            "description": "Não autorizado"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Exams"],
+        "summary": "Deletar prova",
+        "description": "Apenas o professor criador pode deletar a prova",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Prova deletada"
+          },
+          "403": {
+            "description": "Não autorizado"
+          }
+        }
+      }
+    },
+    "/exams/{examId}/questions": {
+      "get": {
+        "tags": ["Questions"],
+        "summary": "Listar questões da prova",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "examId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de questões"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Questions"],
+        "summary": "Criar questão",
+        "description": "Adiciona uma nova questão com múltiplas opções (apenas uma correta)",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "examId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text", "order", "alternatives"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Qual é a capital do Brasil?"
+                  },
+                  "order": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "alternatives": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {"type": "string"},
+                        "is_correct": {"type": "boolean"}
+                      }
+                    },
+                    "example": [
+                      {"text": "São Paulo", "is_correct": false},
+                      {"text": "Brasília", "is_correct": true},
+                      {"text": "Rio de Janeiro", "is_correct": false},
+                      {"text": "Belo Horizonte", "is_correct": false}
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Questão criada"
+          }
+        }
+      }
+    },
+    "/questions/{id}": {
+      "put": {
+        "tags": ["Questions"],
+        "summary": "Atualizar questão",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Questão atualizada"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Questions"],
+        "summary": "Deletar questão",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Questão deletada"
+          }
+        }
+      }
+    },
+    "/submissions/submit": {
+      "post": {
+        "tags": ["Submissions"],
+        "summary": "Submeter respostas da prova",
+        "description": "Aluno responde uma prova e submete as respostas",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["exam_id", "answers"],
+                "properties": {
+                  "exam_id": {
+                    "type": "integer"
+                  },
+                  "answers": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "example": {
+                      "1": "A",
+                      "2": "B",
+                      "3": "C"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respostas submetidas com sucesso"
+          },
+          "409": {
+            "description": "Já foi feita uma submissão desta prova"
+          }
+        }
+      }
+    },
+    "/submissions/exam/{examId}/result/{userId}": {
+      "get": {
+        "tags": ["Submissions"],
+        "summary": "Obter resultado da prova",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "examId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado da prova"
+          }
+        }
+      }
+    },
+    "/submissions/exam/{examId}/user/{userId}": {
+      "get": {
+        "tags": ["Submissions"],
+        "summary": "Obter respostas do aluno",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "examId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Respostas do aluno"
+          }
+        }
+      }
+    },
+    "/analytics/exam/{id}": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Análise da prova",
+        "description": "Retorna estatísticas de uma prova",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estatísticas da prova"
+          }
+        }
+      }
+    },
+    "/analytics/exam/{id}/ranking": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ranking de alunos",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranking de alunos"
+          }
+        }
+      }
+    },
+    "/analytics/exam/{id}/average": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Média da turma",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Média da turma"
+          }
+        }
+      }
+    },
+    "/analytics/exam/{id}/top": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Top alunos",
+        "security": [
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top alunos da prova"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
