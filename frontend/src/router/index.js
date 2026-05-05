@@ -16,30 +16,27 @@ const routes = [
   },
   {
     path: '/professor',
-    component: () => import('@/views/ProfessorLayout.vue'),
+    name: 'professor-dashboard',
+    component: () => import('@/views/ProfessorDashboard.vue'),
     meta: { requiresAuth: true, role: 'professor' },
-    children: [
-      {
-        path: '',
-        name: 'professor-dashboard',
-        component: () => import('@/views/professor/DashboardView.vue'),
-      },
-      {
-        path: 'exams',
-        name: 'exam-list',
-        component: () => import('@/views/professor/ExamListView.vue'),
-      },
-      {
-        path: 'exams/new',
-        name: 'exam-create',
-        component: () => import('@/views/professor/ExamFormView.vue'),
-      },
-      {
-        path: 'exams/:id/edit',
-        name: 'exam-edit',
-        component: () => import('@/views/professor/ExamFormView.vue'),
-      },
-    ],
+  },
+  {
+    path: '/professor/exams',
+    name: 'exam-list',
+    component: () => import('@/views/professor/ExamListView.vue'),
+    meta: { requiresAuth: true, role: 'professor' },
+  },
+  {
+    path: '/professor/exams/new',
+    name: 'exam-create',
+    component: () => import('@/views/professor/ExamFormView.vue'),
+    meta: { requiresAuth: true, role: 'professor' },
+  },
+  {
+    path: '/professor/exams/:id/edit',
+    name: 'exam-edit',
+    component: () => import('@/views/professor/ExamFormView.vue'),
+    meta: { requiresAuth: true, role: 'professor' },
   },
   {
     path: '/aluno',

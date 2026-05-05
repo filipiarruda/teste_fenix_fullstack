@@ -1,10 +1,53 @@
 <template>
-  <div class="container py-5">
-    <div class="mb-4">
-      <RouterLink to="/professor/exams" class="btn btn-outline-secondary">
-        ← Voltar
-      </RouterLink>
-    </div>
+  <div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+      <div class="container-fluid">
+        <RouterLink to="/professor" class="navbar-brand fw-bold">
+          📚 Fenix Educação
+        </RouterLink>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <RouterLink to="/professor" class="nav-link">
+                Dashboard
+              </RouterLink>
+            </li>
+            <li class="nav-item">
+              <RouterLink to="/professor/exams" class="nav-link">
+                Minhas Provas
+              </RouterLink>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                {{ auth.user?.name }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a class="dropdown-item" href="#" @click.prevent="logout">
+                    Sair
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Conteúdo -->
+    <main class="bg-light min-vh-100">
+      <div class="container py-5">
+        <div class="mb-4">
+          <RouterLink to="/professor/exams" class="btn btn-outline-secondary">
+            ← Voltar
+          </RouterLink>
+        </div>
 
     <div class="row justify-content-center">
       <div class="col-lg-8">
@@ -99,7 +142,8 @@
                     <div v-for="(option, oIndex) in question.options" :key="oIndex" class="input-group mb-2">
                       <div class="form-check">
                         <input 
-                          v-model="option.is_correct"
+                          :checked="option.is_correct"
+                          @change="setCorrectOption(qIndex, oIndex)"
                           type="radio"
                           :name="`correct_${qIndex}`"
                           :id="`correct_${qIndex}_${oIndex}`"
@@ -154,16 +198,20 @@
         </form>
       </div>
     </div>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 
 const router = useRouter()
 const route = useRoute()
+const auth = useAuthStore()
 
 const examId = route.params.id
 const isEditing = computed(() => !!examId)
@@ -239,6 +287,15 @@ const removeOption = (questionIndex, optionIndex) => {
   form.value.questions[questionIndex].options.splice(optionIndex, 1)
 }
 
+const setCorrectOption = (questionIndex, optionIndex) => {
+  // Set all options to false
+  form.value.questions[questionIndex].options.forEach(option => {
+    option.is_correct = false
+  })
+  // Set the selected one to true
+  form.value.questions[questionIndex].options[optionIndex].is_correct = true
+}
+
 const submitForm = async () => {
   errors.value = {}
   saving.value = true
@@ -280,9 +337,25 @@ const submitForm = async () => {
     saving.value = false
   }
 }
+
+const logout = async () => {
+  try {
+    await api.post('/auth/logout')
+    auth.logout()
+    router.push('/')
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error)
+    auth.logout()
+    router.push('/')
+  }
+}
 </script>
 
 <style scoped>
+.min-vh-100 {
+  min-height: 100vh;
+}
+
 .input-group .form-check {
   padding: 0.375rem 0.75rem;
   background-color: #f8f9fa;
