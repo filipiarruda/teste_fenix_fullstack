@@ -45,7 +45,7 @@
             <!-- Card de Pontuação -->
             <div class="card shadow-sm mb-4">
               <div class="card-header bg-light">
-                <h2 class="mb-1">{{ exam.title }}</h2>
+                <h2 class="mb-1">{{ result?.exam?.title }}</h2>
                 <p class="text-muted mb-0">Resultado da sua prova</p>
               </div>
 

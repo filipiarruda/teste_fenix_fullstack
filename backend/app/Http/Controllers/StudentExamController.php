@@ -161,7 +161,7 @@ class StudentExamController extends Controller
 
         $result = ExamResult::where('user_id', $user->id)
             ->where('exam_id', $exam->id)
-            ->with('answers.question.options', 'answers.selectedOption')
+            ->with(['exam', 'answers.question.options', 'answers.selectedOption'])
             ->first();
 
         if (!$result) {
