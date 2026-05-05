@@ -11,7 +11,11 @@ class Exam extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'title', 'description'];
+    protected $fillable = ['user_id', 'title', 'description', 'published'];
+
+    protected $casts = [
+        'published' => 'boolean',
+    ];
 
     public function user(): BelongsTo
     {

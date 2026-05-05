@@ -44,6 +44,24 @@ const routes = [
     component: () => import('@/views/StudentDashboard.vue'),
     meta: { requiresAuth: true, role: 'student' },
   },
+  {
+    path: '/aluno/exams',
+    name: 'student-exam-list',
+    component: () => import('@/views/student/StudentExamListView.vue'),
+    meta: { requiresAuth: true, role: 'student' },
+  },
+  {
+    path: '/aluno/exams/:id',
+    name: 'student-exam-take',
+    component: () => import('@/views/student/StudentExamTakeView.vue'),
+    meta: { requiresAuth: true, role: 'student' },
+  },
+  {
+    path: '/aluno/exams/:id/result',
+    name: 'student-exam-result',
+    component: () => import('@/views/student/StudentExamResultView.vue'),
+    meta: { requiresAuth: true, role: 'student' },
+  },
 ]
 
 const router = createRouter({

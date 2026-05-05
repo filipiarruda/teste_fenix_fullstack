@@ -35,62 +35,52 @@
       <div class="container py-5">
         <div class="row">
           <div class="col-lg-8">
-            <!-- Bem-vindo -->
             <div class="mb-5">
               <h1 class="mb-2">Bem-vindo, {{ auth.user?.name }}!</h1>
-              <p class="text-muted">Continue respondendo suas provas e acompanhe seu progresso.</p>
+              <p class="text-muted">Responda as provas disponíveis e veja seu desempenho.</p>
             </div>
 
-            <!-- Card de Ação Principal -->
-            <div class="row mb-5">
-              <div class="col-md-6 mb-3">
-                <RouterLink to="/aluno/exams" class="text-decoration-none">
-                  <div class="card h-100 shadow-sm border-0 text-center py-5 hover-card">
-                    <div class="card-body">
-                      <div class="fs-1 mb-3">📝</div>
-                      <h5 class="card-title">Responder Provas</h5>
-                      <p class="card-text text-muted small">Acesse as provas disponíveis e responda-as</p>
-                    </div>
-                  </div>
-                </RouterLink>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <RouterLink to="/aluno/historico" class="text-decoration-none">
-                  <div class="card h-100 shadow-sm border-0 text-center py-5 hover-card">
-                    <div class="card-body">
-                      <div class="fs-1 mb-3">📊</div>
-                      <h5 class="card-title">Meu Histórico</h5>
-                      <p class="card-text text-muted small">Revise suas provas respondidas e desempenho</p>
-                    </div>
-                  </div>
-                </RouterLink>
+            <!-- Carregando -->
+            <div v-if="loading" class="text-center py-5">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Carregando...</span>
               </div>
             </div>
 
-            <!-- Estatísticas Rápidas -->
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <div class="card border-0 shadow-sm">
+            <!-- Listagem de Provas -->
+            <div v-else-if="exams.length > 0" class="row">
+              <div v-for="exam in exams" :key="exam.id" class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
                   <div class="card-body">
-                    <h6 class="card-title text-muted">Provas Respondidas</h6>
-                    <div class="display-6 fw-bold">{{ stats.completed }}</div>
+                    <h5 class="card-title">{{ exam.title }}</h5>
+                    <p class="card-text text-muted">{{ exam.description || 'Sem descrição' }}</p>
+                    <p class="small text-secondary">
+                      📝 {{ exam.questions?.length || 0 }} questões
+                    </p>
+                  </div>
+                  <div class="card-footer bg-transparent">
+                    <button 
+                      @click="startExam(exam.id)"
+                      class="btn btn-primary w-100"
+                      :disabled="exam.id === respondingExamId"
+                    >
+                      <span v-if="exam.id === respondingExamId">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Carregando...
+                      </span>
+                      <span v-else>Responder Prova</span>
+                    </button>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="col-md-6 mb-3">
-                <div class="card border-0 shadow-sm">
-                  <div class="card-body">
-                    <h6 class="card-title text-muted">Provas Disponíveis</h6>
-                    <div class="display-6 fw-bold">{{ stats.available }}</div>
-                  </div>
-                </div>
-              </div>
+            <!-- Vazio -->
+            <div v-else class="alert alert-info text-center py-5">
+              <p>🎉 Parabéns! Você já respondeu todas as provas disponíveis.</p>
             </div>
           </div>
 
-          <!-- Barra Lateral -->
           <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
               <div class="card-header bg-light">
@@ -101,13 +91,9 @@
                   <strong>Nome:</strong><br/>
                   {{ auth.user?.name }}
                 </p>
-                <p class="mb-2">
-                  <strong>Email:</strong><br/>
-                  <small>{{ auth.user?.email }}</small>
-                </p>
                 <p class="mb-0">
-                  <strong>Tipo:</strong><br/>
-                  Estudante
+                  <strong>Email:</strong><br/>
+                  {{ auth.user?.email }}
                 </p>
               </div>
             </div>
@@ -127,20 +113,31 @@ import api from '@/services/api'
 const router = useRouter()
 const auth = useAuthStore()
 
-const stats = ref({
-  completed: 0,
-  available: 0
-})
+const exams = ref([])
+const loading = ref(true)
+const respondingExamId = ref(null)
 
 onMounted(async () => {
   try {
     const response = await api.get('/student/exams')
-    stats.value.available = response.data.length
-    // Aqui poderíamos adicionar endpoint para contar provas respondidas
+    exams.value = response.data
   } catch (error) {
-    console.error('Erro ao carregar estatísticas:', error)
+    console.error('Erro ao carregar provas:', error)
+  } finally {
+    loading.value = false
   }
 })
+
+const startExam = async (examId) => {
+  respondingExamId.value = examId
+  try {
+    // Navegar para a página de responder prova
+    router.push(`/aluno/exams/${examId}`)
+  } catch (error) {
+    console.error('Erro ao carregar prova:', error)
+    respondingExamId.value = null
+  }
+}
 
 const logout = async () => {
   try {
@@ -158,14 +155,5 @@ const logout = async () => {
 <style scoped>
 .min-vh-100 {
   min-height: 100vh;
-}
-
-.hover-card {
-  transition: all 0.3s ease;
-}
-
-.hover-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 </style>

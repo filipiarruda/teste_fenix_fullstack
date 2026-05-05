@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\StudentExamController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -19,5 +20,12 @@ Route::prefix('v1')->group(function () {
 
         // Exams (CRUD para professores)
         Route::apiResource('exams', ExamController::class);
+
+        // Student Exams (Responder provas)
+        Route::get('/student/exams', [StudentExamController::class, 'index']);
+        Route::get('/student/exams/{exam}', [StudentExamController::class, 'show']);
+        Route::post('/student/exams/{exam}/submit', [StudentExamController::class, 'submit']);
+        Route::get('/student/exams/{exam}/result', [StudentExamController::class, 'result']);
     });
 });
+
