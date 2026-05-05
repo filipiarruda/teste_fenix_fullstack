@@ -53,9 +53,34 @@ docker-compose logs -f backend
 
 ### 5. Acesse a aplicação
 
-- **Frontend**: http://localhost:5173
-- **API**: http://localhost:8000/api/v1
-- **Health Check**: http://localhost:8000/api/v1/health
+- **Frontend**: http://localhost:8004
+- **API Backend**: http://localhost:8885/api
+
+### 6. Crie seus usuários de teste
+
+A aplicação utiliza autenticação por registro. Crie dois usuários para testar todas as funcionalidades:
+
+**Criar usuário Professor:**
+1. Acesse http://localhost:8004
+2. Clique em "Cadastre-se"
+3. Preencha os dados:
+   - Nome: Professor Silva
+   - Email: professor@test.com
+   - Senha: password123 (mínimo 8 caracteres)
+   - Tipo: 👨‍🏫 Professor
+4. Clique em "Criar conta"
+
+**Criar usuário Aluno:**
+1. Faça logout (clique no seu nome → Sair)
+2. Clique em "Cadastre-se" novamente
+3. Preencha os dados:
+   - Nome: João Silva
+   - Email: aluno@test.com
+   - Senha: password123
+   - Tipo: 👨‍🎓 Aluno
+4. Clique em "Criar conta"
+
+Agora você pode testar o sistema completo com ambos os perfis!
 
 ## Dados de Teste
 

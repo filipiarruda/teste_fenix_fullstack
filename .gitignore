@@ -1,0 +1,86 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Laravel
+/vendor/
+/node_modules/
+/public/hot
+/public/storage
+/storage/*.key
+/bootstrap/cache/
+.phpunit.result.cache
+phpunit.xml
+
+# Backend
+backend/vendor/
+backend/node_modules/
+backend/storage/
+backend/bootstrap/cache/
+backend/.env
+backend/.env.local
+backend/composer.lock
+backend/package-lock.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/package-lock.json
+frontend/.vite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+docker-compose.override.yml
+
+# Build outputs
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Testing
+.nyc_output/
+coverage/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Development
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE specific
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
